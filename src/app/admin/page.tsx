@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { AdminAuth } from "@/components/ui/admin-auth";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Sparkles,
   Plus,
@@ -16,9 +17,6 @@ import {
   Users,
   Eye,
   ClipboardList,
-  Shield,
-  LogIn,
-  Lock,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -645,5 +643,6 @@ export default function AdminDashboard() {
         </div>
       </div>
     </div>
+    </AdminAuth>
   );
 }

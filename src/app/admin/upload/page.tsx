@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AdminAuth } from "@/components/ui/admin-auth";
 import { useToast } from "@/components/ui/use-toast";
 import { ArrowLeft, Upload, Sparkles, Image as ImageIcon, BookOpen } from "lucide-react";
 import Link from "next/link";
@@ -80,6 +81,7 @@ export default function AdminUploadPanel() {
   };
 
   return (
+    <AdminAuth>
     <div className="min-h-screen bg-transparent p-6 md:p-12 flex flex-col justify-center items-center">
       <div className="w-full max-w-lg mb-6">
         <Link
@@ -189,5 +191,6 @@ export default function AdminUploadPanel() {
         </CardContent>
       </Card>
     </div>
+    </AdminAuth>
   );
 }
