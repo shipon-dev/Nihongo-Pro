@@ -271,7 +271,7 @@ export default function Home() {
                                   : "border-neutral-300 bg-white text-neutral-500 hover:border-neutral-400 hover:text-neutral-900 dark:border-white/[0.08] dark:bg-white/[0.02] dark:text-neutral-500 dark:hover:border-white/[0.15] dark:hover:text-neutral-200"
                               }`}
                             >
-                              {chapter}
+                              Chapter {chapter}
                             </button>
                           );
                         })}

@@ -6,7 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
-import { Send, CheckCircle2, ListChecks, Play, FileText, LogIn } from "lucide-react";
+import {
+  Send,
+  CheckCircle2,
+  ListChecks,
+  Play,
+  FileText,
+  LogIn,
+} from "lucide-react";
 
 interface Word {
   id: string;
@@ -54,7 +61,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
 
   const filterChaptersRef = useRef("");
 
-  const [practiceCount, setPracticeCount] = useState(10);
+  const [practiceCount, setPracticeCount] = useState<number | string>(10);
   const [practiceSetup, setPracticeSetup] = useState(true);
 
   useEffect(() => {
@@ -99,7 +106,8 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
 
           if (tempData.success && wordsData.success) {
             const template = tempData.templates.find(
-              (t: any) => t.templateId.toUpperCase() === params.id.toUpperCase()
+              (t: any) =>
+                t.templateId.toUpperCase() === params.id.toUpperCase(),
             );
 
             if (!template) {
@@ -116,7 +124,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
             if (template.chapters && template.chapters.length > 0) {
               const chs = template.chapters.map((c: string) => c.toLowerCase());
               filtered = wordsData.words.filter((w: any) =>
-                chs.includes(w.chapter.toLowerCase())
+                chs.includes(w.chapter.toLowerCase()),
               );
             }
 
@@ -129,7 +137,8 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
           toast({
             variant: "destructive",
             title: "Exam Empty",
-            description: "No vocabulary words found for the selected configuration.",
+            description:
+              "No vocabulary words found for the selected configuration.",
           });
           router.push("/");
           return;
@@ -143,7 +152,9 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
         }));
 
         setQuestions(formatted);
-        setAnswers(formatted.map((q) => ({ wordId: q.wordId, userAnswer: "" })));
+        setAnswers(
+          formatted.map((q) => ({ wordId: q.wordId, userAnswer: "" })),
+        );
         if (!isPractice) setPracticeSetup(false);
       } catch (err) {
         console.error("Failed setting up exam:", err);
@@ -162,7 +173,8 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
         wordId: q.wordId,
         userAnswer: ans,
         correctAnswer: q.correctAnswer,
-        isCorrect: ans.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase(),
+        isCorrect:
+          ans.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase(),
       };
     });
 
@@ -282,7 +294,9 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
         <div className="text-center space-y-4">
           <div className="mx-auto h-10 w-10 animate-spin rounded-full border-2 border-emerald-500/30 border-t-emerald-500" />
-          <p className="text-sm font-semibold text-neutral-500">Loading questions...</p>
+          <p className="text-sm font-semibold text-neutral-500">
+            Loading questions...
+          </p>
         </div>
       </div>
     );
@@ -296,7 +310,9 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
             <CheckCircle2 className="h-8 w-8" />
           </div>
           <h2 className="text-2xl font-black">Redirecting to Result</h2>
-          <p className="text-xs text-neutral-500">Your answers are being processed...</p>
+          <p className="text-xs text-neutral-500">
+            Your answers are being processed...
+          </p>
         </div>
       </div>
     );
@@ -313,7 +329,8 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
               </div>
               <h2 className="text-2xl font-black">Practice Session</h2>
               <p className="mt-2 text-sm text-neutral-500">
-                {questions.length} questions available. Choose how many you want to practice.
+                {questions.length} questions available. Choose how many you want
+                to practice.
               </p>
             </div>
 
@@ -327,8 +344,16 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
                 max={questions.length}
                 value={practiceCount}
                 onChange={(e) => {
-                  const val = parseInt(e.target.value) || 1;
-                  setPracticeCount(Math.min(Math.max(val, 1), questions.length));
+                  if (e.target.value === "") {
+                    setPracticeCount("");
+                    return;
+                  }
+                  const val = parseInt(e.target.value);
+                  if (!isNaN(val)) {
+                    setPracticeCount(
+                      Math.min(Math.max(val, 1), questions.length),
+                    );
+                  }
                 }}
                 className="h-14 text-center text-2xl font-bold"
               />
@@ -339,10 +364,13 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
 
             <Button
               onClick={() => {
+                const count = typeof practiceCount === 'number' ? practiceCount : 1;
                 const shuffled = [...questions].sort(() => 0.5 - Math.random());
-                const selected = shuffled.slice(0, practiceCount);
+                const selected = shuffled.slice(0, count);
                 setQuestions(selected);
-                setAnswers(selected.map((q) => ({ wordId: q.wordId, userAnswer: "" })));
+                setAnswers(
+                  selected.map((q) => ({ wordId: q.wordId, userAnswer: "" })),
+                );
                 setPracticeSetup(false);
               }}
               variant="premium"
@@ -364,9 +392,14 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
         <div>
           <h2 className="flex items-center gap-2 text-xl font-extrabold">
             {isPractice ? (
-              <><ListChecks className="h-5 w-5 text-emerald-500" /> Practice Sheet</>
+              <>
+                <ListChecks className="h-5 w-5 text-emerald-500" /> Practice
+                Sheet
+              </>
             ) : (
-              <><FileText className="h-5 w-5 text-emerald-500" /> {params.id}</>
+              <>
+                <FileText className="h-5 w-5 text-emerald-500" /> {params.id}
+              </>
             )}
           </h2>
           <p className="text-xs text-neutral-500 mt-1">Candidate: {userName}</p>
@@ -383,19 +416,24 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
               <div className="flex items-start justify-between">
                 <div>
                   <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-xs font-semibold uppercase tracking-widest text-emerald-500">
-                    {q.chapter}
+                    Chapter {q.chapter}
                   </span>
                   <h3 className="mt-3 text-2xl font-black leading-tight">
                     {index + 1}. {q.japaneseWord}
                   </h3>
                 </div>
-                <span className="ml-4 shrink-0 text-xs font-bold text-neutral-400">#{index + 1}</span>
+                <span className="ml-4 shrink-0 text-xs font-bold text-neutral-400">
+                  #{index + 1}
+                </span>
               </div>
               <Input
                 value={answers[index]?.userAnswer || ""}
                 onChange={(e) => {
                   const updated = [...answers];
-                  updated[index] = { ...updated[index], userAnswer: e.target.value };
+                  updated[index] = {
+                    ...updated[index],
+                    userAnswer: e.target.value,
+                  };
                   setAnswers(updated);
                 }}
                 placeholder="বাংলায় অর্থ লিখুন..."
