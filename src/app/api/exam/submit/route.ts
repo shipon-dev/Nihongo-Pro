@@ -16,13 +16,12 @@ export async function POST(req: Request) {
     const resultId = `RES-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
     const timestamp = new Date().toISOString();
 
-    // Google Auth ক্লায়েন্ট সরাসরি ব্যাকএন্ডে হ্যান্ডেল করা (কোটা অপ্টিমাইজেশনের জন্য বেস্ট)
-    const auth = new google.auth.JWT(
-      process.env.GOOGLE_CLIENT_EMAIL,
-      null,
-      process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      ['https://www.googleapis.com/auth/spreadsheets']
-    );
+    const auth = new google.auth.JWT({
+  email: process.env.GOOGLE_CLIENT_EMAIL,
+  key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+});
+
     const sheets = google.sheets({ version: 'v4', auth });
     const spreadsheetId = process.env.SPREADSHEET_ID; // আপনার এনভায়রনমেন্ট ভ্যারিয়েবল
 
