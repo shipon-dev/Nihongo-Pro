@@ -23,7 +23,7 @@ export function ToastProvider() {
   }, [])
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-3 w-full max-w-sm pointer-events-none px-4 md:px-0">
+    <div className="fixed top-4 left-4 right-4 z-50 flex flex-col gap-3 pointer-events-none md:left-auto md:right-4 md:max-w-sm">
       {toasts.map((toast) => {
         let borderClass = "border-neutral-300 bg-white/90 dark:border-white/[0.08] dark:bg-black/80 dark:backdrop-blur-2xl"
         let icon = <Info className="h-5 w-5 text-emerald-500" />

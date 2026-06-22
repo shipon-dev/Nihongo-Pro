@@ -121,7 +121,11 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
             }
 
             let filtered = wordsData.words;
-            if (template.chapters && template.chapters.length > 0) {
+            if (template.selectedWords && template.selectedWords.length > 0) {
+              filtered = wordsData.words.filter((w: any) =>
+                template.selectedWords.includes(w.id),
+              );
+            } else if (template.chapters && template.chapters.length > 0) {
               const chs = template.chapters.map((c: string) => c.toLowerCase());
               filtered = wordsData.words.filter((w: any) =>
                 chs.includes(w.chapter.toLowerCase()),
@@ -169,12 +173,17 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
   const handleSubmit = async () => {
     const finalResponses: ResponseDetail[] = questions.map((q, i) => {
       const ans = answers[i]?.userAnswer || "";
+      const cleanCorrectAnswer = q.correctAnswer.replace(/\s*\(.*?\)\s*/g, "").trim();
+      const possibleAnswers = cleanCorrectAnswer.split(/[/,]+/).map((s) => s.trim().toLowerCase());
+      const normalizedUserAnswer = ans.trim().toLowerCase();
+      const isCorrectMatch = possibleAnswers.some(
+        (correct) => correct === normalizedUserAnswer,
+      );
       return {
         wordId: q.wordId,
         userAnswer: ans,
         correctAnswer: q.correctAnswer,
-        isCorrect:
-          ans.trim().toLowerCase() === q.correctAnswer.trim().toLowerCase(),
+        isCorrect: isCorrectMatch,
       };
     });
 

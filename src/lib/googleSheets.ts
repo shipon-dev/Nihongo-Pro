@@ -46,6 +46,28 @@ export async function appendSheetRow(range: string, values: any[]) {
   }
 }
 
+export async function clearSheetRange(...ranges: string[]) {
+  if (!spreadsheetId) {
+    throw new Error("GOOGLE_SHEET_ID environment variable is missing.");
+  }
+  try {
+    if (ranges.length === 1) {
+      await sheets.spreadsheets.values.clear({
+        spreadsheetId,
+        range: ranges[0],
+      });
+    } else if (ranges.length > 1) {
+      await sheets.spreadsheets.values.batchClear({
+        spreadsheetId,
+        requestBody: { ranges },
+      });
+    }
+  } catch (error: any) {
+    console.error(`Error clearing ranges ${ranges.join(", ")}:`, error);
+    throw error;
+  }
+}
+
 export async function appendSheetRows(range: string, values: any[][]) {
   if (!spreadsheetId) {
     throw new Error("GOOGLE_SHEET_ID environment variable is missing.");

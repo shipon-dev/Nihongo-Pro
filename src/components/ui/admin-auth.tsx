@@ -9,13 +9,26 @@ import { Shield, Lock } from "lucide-react";
 
 export function AdminAuth({ children }: { children: ReactNode }) {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
   const [authEmail, setAuthEmail] = useState("");
   const [authPass, setAuthPass] = useState("");
 
   useEffect(() => {
     setAuthenticated(sessionStorage.getItem("admin_auth") === "true");
+    setLoading(false);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-6">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 rounded-full border-2 border-emerald-500/30 border-t-emerald-500 animate-spin" />
+          <p className="text-sm text-neutral-500 font-semibold">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (authenticated) return <>{children}</>;
 
