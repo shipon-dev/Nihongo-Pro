@@ -23,7 +23,8 @@ export async function POST(req: Request) {
 });
 
     const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = process.env.SPREADSHEET_ID; // আপনার এনভায়রনমেন্ট ভ্যারিয়েবল
+    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
+
 
     // ১. মেইন রেজাল্ট অ্যাপেন্ড করুন (১টি রিকোয়েস্ট)
     await sheets.spreadsheets.values.append({
