@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { appendSheetRow } from "@/lib/googleSheets";
+import { google } from "googleapis"; // সরাসরি গুগলের অফিশিয়াল প্যাকেজ ব্যবহার করা সবচেয়ে নিরাপদ
 
 export async function POST(req: Request) {
   try {
@@ -16,26 +16,44 @@ export async function POST(req: Request) {
     const resultId = `RES-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
     const timestamp = new Date().toISOString();
 
-    // Append to Exam_Results spreadsheet
-    await appendSheetRow("Exam_Results!A2:F", [
+    // Google Auth ক্লায়েন্ট সরাসরি ব্যাকএন্ডে হ্যান্ডেল করা (কোটা অপ্টিমাইজেশনের জন্য বেস্ট)
+    const auth = new google.auth.JWT(
+      process.env.GOOGLE_CLIENT_EMAIL,
+      null,
+      process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+      ['https://www.googleapis.com/auth/spreadsheets']
+    );
+    const sheets = google.sheets({ version: 'v4', auth });
+    const spreadsheetId = process.env.SPREADSHEET_ID; // আপনার এনভায়রনমেন্ট ভ্যারিয়েবল
+
+    // ১. মেইন রেজাল্ট অ্যাপেন্ড করুন (১টি রিকোয়েস্ট)
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: "Exam_Results!A2:F",
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: [[resultId, userName, templateId || "Practice", score, totalMarks, timestamp]],
+      },
+    });
+
+    // ২. লুপ ছাড়া সব ডিটেইলস একসাথে রেডি করুন
+    const rowsToInsert = responses.map((response) => [
       resultId,
-      userName,
-      templateId || "Practice",
-      score,
-      totalMarks,
-      timestamp,
+      response.wordId || "",
+      response.userAnswer || "",
+      response.correctAnswer || "",
+      response.isCorrect ? "TRUE" : "FALSE",
     ]);
 
-    // Append detail breakdown responses in loop
-    for (const response of responses) {
-      await appendSheetRow("Result_Details!A2:E", [
-        resultId,
-        response.wordId || "",
-        response.userAnswer || "",
-        response.correctAnswer || "",
-        response.isCorrect ? "TRUE" : "FALSE",
-      ]);
-    }
+    // ৩. সবগুলো রো একসাথে ১টি মাত্র রিকোয়েস্টে অ্যাপেন্ড করুন 🚀
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: "Result_Details!A2:E",
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: rowsToInsert, // এখানে টু-ডাইমেনশনাল অ্যারে যাচ্ছে
+      },
+    });
 
     return NextResponse.json({
       success: true,
