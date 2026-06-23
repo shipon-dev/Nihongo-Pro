@@ -291,14 +291,16 @@ export default function AdminDashboard() {
                               <thead>
                                 <tr className="border-b border-neutral-200 text-xs font-semibold text-neutral-500 uppercase tracking-wider dark:border-white/[0.06]">
                                   <th className="pb-3 pr-4">ID</th>
-                                  <th className="pb-3 pr-4">Japanese Word</th>
+                                  <th className="pb-3 pr-4 min-w-40 lg:min-w-fit">
+                                    Japanese Word
+                                  </th>
                                   <th className="pb-3 pr-4">Bangla Meaning</th>
                                   <th className="pb-3 pr-4">Chapter</th>
                                   <th className="pb-3">Visual</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-neutral-100 text-sm text-neutral-700 dark:divide-white/[0.03] dark:text-neutral-300">
-                                {filteredWords.map((word) => (
+                                {filteredWords?.map((word) => (
                                   <tr
                                     key={word.id}
                                     className="hover:bg-neutral-50 transition-colors dark:hover:bg-white/[0.02]"
@@ -306,7 +308,7 @@ export default function AdminDashboard() {
                                     <td className="py-3.5 pr-4 font-mono text-emerald-600 dark:text-emerald-400">
                                       {word.id}
                                     </td>
-                                    <td className="py-3.5 pr-4 font-bold text-base">
+                                    <td className="py-3.5 pr-4 font-bold text-base min-w-40 lg:min-w-fit">
                                       {word.japaneseWord}
                                     </td>
                                     <td className="py-3.5 pr-4 text-neutral-500">
@@ -503,7 +505,9 @@ export default function AdminDashboard() {
                                         <Button
                                           variant="ghost"
                                           size="sm"
-                                          disabled={deletingId === result.resultId}
+                                          disabled={
+                                            deletingId === result.resultId
+                                          }
                                           onClick={() => {
                                             if (
                                               window.confirm(

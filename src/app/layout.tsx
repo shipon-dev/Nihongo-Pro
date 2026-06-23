@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   description: 'A premium full-stack platform for Japanese language learning, dynamic vocabulary image scanning, and secure examinations.',
   keywords: ['Japanese', 'exam', 'vocabulary', 'learning', 'Nihongo', 'Bangla'],
   authors: [{ name: 'Nihongo Pro' }],
+  manifest: '/manifest.json',
+  themeColor: '#000000',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Nihongo Pro',
+  },
 }
 
 export default function RootLayout({
