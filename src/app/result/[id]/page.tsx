@@ -31,6 +31,7 @@ interface ResultData {
   score: number;
   totalMarks: number;
   timestamp: string;
+  status: string;
   responses: ResponseItem[];
 }
 
@@ -77,6 +78,30 @@ export default function ResultViewer({ params }: { params: { id: string } }) {
           <h3 className="text-xl font-bold">Record Not Found</h3>
           <p className="mt-2 text-sm text-neutral-500">
             The exam score record code could not be resolved in the database.
+          </p>
+          <Link href="/">
+            <Button className="mt-6 font-bold" variant="outline">
+              Return Home
+            </Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  if (result.status === "pending_review") {
+    return (
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-6">
+        <Card className="w-full max-w-md border-amber-500/20 p-8 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-amber-500/20 bg-amber-500/10 text-amber-500">
+            <svg className="h-8 w-8 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold">Result Pending Review</h3>
+          <p className="mt-2 text-sm text-neutral-500">
+            Your exam is currently being reviewed by the administrator. Please
+            check back later to view your result.
           </p>
           <Link href="/">
             <Button className="mt-6 font-bold" variant="outline">

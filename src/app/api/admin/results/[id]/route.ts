@@ -10,8 +10,8 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: "Missing result ID" }, { status: 400 });
     }
 
-    const resultsRows = await getSheetData("Exam_Results!A2:F");
-    const detailsRows = await getSheetData("Result_Details!A2:E");
+    const resultsRows = await getSheetData("Exam_Results!A2:G");
+    const detailsRows = await getSheetData("Result_Details!A2:F");
 
     const resultIndex = resultsRows.findIndex((row) => row[0] === resultId);
     if (resultIndex === -1) {
@@ -19,12 +19,12 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     }
 
     const resultRowNum = resultIndex + 2;
-    const examRange = `Exam_Results!A${resultRowNum}:F${resultRowNum}`;
+    const examRange = `Exam_Results!A${resultRowNum}:G${resultRowNum}`;
 
     const detailRanges = detailsRows
       .map((row, i) => (row[0] === resultId ? i + 2 : null))
       .filter((r): r is number => r !== null)
-      .map((rowNum) => `Result_Details!A${rowNum}:E${rowNum}`);
+      .map((rowNum) => `Result_Details!A${rowNum}:F${rowNum}`);
 
     await clearSheetRange(examRange, ...detailRanges);
 

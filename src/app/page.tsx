@@ -257,7 +257,7 @@ export default function Home() {
                         No chapters found. Defaulting to all cards.
                       </p>
                     ) : (
-                      <div className="flex max-h-24 flex-wrap gap-2 overflow-y-auto pr-2 pt-1">
+                      <div className="flex h-full max-h-40 flex-wrap gap-2 overflow-y-auto pr-2 pt-1">
                         {availableChapters.map((chapter) => {
                           const isSelected = selectedChapters.includes(chapter);
                           return (
@@ -319,7 +319,7 @@ export default function Home() {
         </Card>
       </div>
 
-      <footer className="mt-auto w-full max-w-6xl border-t border-neutral-200 py-4 text-center text-xs text-neutral-400 dark:border-white/[0.04] dark:text-neutral-600">
+      <footer className="mt-5 w-full max-w-6xl border-t border-neutral-200 py-4 text-center text-xs text-neutral-400 dark:border-white/[0.04] dark:text-neutral-600">
         &copy; {new Date().getFullYear()} Nihongo Pro.
       </footer>
     </div>

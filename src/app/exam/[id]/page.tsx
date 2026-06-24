@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import {
-  Send,
   CheckCircle2,
-  ListChecks,
-  Play,
   FileText,
+  ListChecks,
   LogIn,
+  Play,
+  Send,
 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
 interface Word {
   id: string;
@@ -58,6 +58,9 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
   const [loading, setLoading] = useState(true);
   const [examFinished, setExamFinished] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submittedResultId, setSubmittedResultId] = useState<string | null>(
+    null,
+  );
 
   const filterChaptersRef = useRef("");
 
@@ -173,8 +176,12 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
   const handleSubmit = async () => {
     const finalResponses: ResponseDetail[] = questions.map((q, i) => {
       const ans = answers[i]?.userAnswer || "";
-      const cleanCorrectAnswer = q.correctAnswer.replace(/\s*\(.*?\)\s*/g, "").trim();
-      const possibleAnswers = cleanCorrectAnswer.split(/[/,]+/).map((s) => s.trim().toLowerCase());
+      const cleanCorrectAnswer = q.correctAnswer
+        .replace(/\s*\(.*?\)\s*/g, "")
+        .trim();
+      const possibleAnswers = cleanCorrectAnswer
+        .split(/[/,]+/)
+        .map((s) => s.trim().toLowerCase());
       const normalizedUserAnswer = ans.trim().toLowerCase();
       const isCorrectMatch = possibleAnswers.some(
         (correct) => correct === normalizedUserAnswer,
@@ -207,12 +214,12 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
       const submitData = await submitRes.json();
       if (submitRes.ok && submitData.success) {
         setExamFinished(true);
+        // setSubmittedResultId(submitData.resultId);
         toast({
           variant: "success",
-          title: "Exam Saved!",
-          description: "Your responses have been logged in Google Sheets.",
+          title: "Exam Submitted!",
+          description: "Your responses have been logged successfully.",
         });
-        router.push(`/result/${submitData.resultId}`);
       } else {
         throw new Error(submitData.error || "Failed submission logging");
       }
@@ -312,17 +319,22 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
   }
 
   if (examFinished) {
+    const resultLink = `${window.location.origin}/result/${submittedResultId}`;
+
     return (
-      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
-        <div className="text-center space-y-4 max-w-sm">
-          <div className="mx-auto flex h-16 w-16 animate-pulse items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 shadow-lg shadow-emerald-500/10">
-            <CheckCircle2 className="h-8 w-8" />
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-6">
+        <Card className="w-full max-w-lg p-8 text-center space-y-6">
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-emerald-500/20 bg-emerald-500/10 text-emerald-500 shadow-lg shadow-emerald-500/10">
+            <CheckCircle2 className="h-10 w-10" />
           </div>
-          <h2 className="text-2xl font-black">Redirecting to Result</h2>
-          <p className="text-xs text-neutral-500">
-            Your answers are being processed...
-          </p>
-        </div>
+          <div className="space-y-2">
+            <h2 className="text-3xl font-black">Thank You!</h2>
+            <p className="text-sm text-neutral-500">
+              Your exam has been submitted successfully. The admin will review
+              your answers and publish the result.
+            </p>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -373,7 +385,8 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
 
             <Button
               onClick={() => {
-                const count = typeof practiceCount === 'number' ? practiceCount : 1;
+                const count =
+                  typeof practiceCount === "number" ? practiceCount : 1;
                 const shuffled = [...questions].sort(() => 0.5 - Math.random());
                 const selected = shuffled.slice(0, count);
                 setQuestions(selected);

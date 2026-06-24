@@ -45,6 +45,8 @@ interface Result {
   score: number;
   totalMarks: number;
   timestamp: string;
+  status: string;
+  canReview?: boolean;
 }
 
 export default function AdminDashboard() {
@@ -61,6 +63,13 @@ export default function AdminDashboard() {
 
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingWord, setEditingWord] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    japaneseWord: "",
+    banglaMeaning: "",
+    chapter: "",
+  });
+  const [savingWord, setSavingWord] = useState(false);
 
   const deleteResult = async (resultId: string) => {
     setDeletingId(resultId);
@@ -84,6 +93,82 @@ export default function AdminDashboard() {
         variant: "destructive",
         title: "Delete Failed",
         description: err.message || "Could not delete the result.",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const startEdit = (word: Word) => {
+    setEditingWord(word.id);
+    setEditForm({
+      japaneseWord: word.japaneseWord,
+      banglaMeaning: word.banglaMeaning,
+      chapter: word.chapter,
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingWord(null);
+    setEditForm({ japaneseWord: "", banglaMeaning: "", chapter: "" });
+  };
+
+  const saveEdit = async () => {
+    if (!editingWord) return;
+    setSavingWord(true);
+    try {
+      const res = await fetch(`/api/admin/words/${editingWord}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWords((prev) =>
+          prev.map((w) => (w.id === editingWord ? { ...w, ...editForm } : w)),
+        );
+        toast({
+          variant: "success",
+          title: "Word Updated",
+          description: `Vocabulary "${editForm.japaneseWord}" has been updated.`,
+        });
+        cancelEdit();
+      } else {
+        throw new Error(data.error || "Failed to update");
+      }
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Update Failed",
+        description: err.message || "Could not update the word.",
+      });
+    } finally {
+      setSavingWord(false);
+    }
+  };
+
+  const deleteWord = async (wordId: string) => {
+    setDeletingId(wordId);
+    try {
+      const res = await fetch(`/api/admin/words/${wordId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setWords((prev) => prev.filter((w) => w.id !== wordId));
+        toast({
+          variant: "success",
+          title: "Word Deleted",
+          description: `Word "${wordId}" has been removed.`,
+        });
+      } else {
+        throw new Error(data.error || "Failed to delete");
+      }
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Delete Failed",
+        description: err.message || "Could not delete the word.",
       });
     } finally {
       setDeletingId(null);
@@ -132,7 +217,8 @@ export default function AdminDashboard() {
     (r) =>
       r.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       r.resultId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      r.templateId.toLowerCase().includes(searchQuery.toLowerCase()),
+      r.templateId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      r.status.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   return (
@@ -255,7 +341,7 @@ export default function AdminDashboard() {
 
               <CardContent className="p-6">
                 {activeTab !== "templates" && (
-                  <div className="relative mb-6">
+                  <div className="relative mb-6 mt-2">
                     <Search className="absolute left-3 top-3.5 h-4 w-4 text-neutral-500" />
                     <Input
                       placeholder={
@@ -296,7 +382,8 @@ export default function AdminDashboard() {
                                   </th>
                                   <th className="pb-3 pr-4">Bangla Meaning</th>
                                   <th className="pb-3 pr-4">Chapter</th>
-                                  <th className="pb-3">Visual</th>
+                                  <th className="pb-3 pr-4">Visual</th>
+                                  <th className="pb-3">Actions</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-neutral-100 text-sm text-neutral-700 dark:divide-white/[0.03] dark:text-neutral-300">
@@ -309,17 +396,56 @@ export default function AdminDashboard() {
                                       {word.id}
                                     </td>
                                     <td className="py-3.5 pr-4 font-bold text-base min-w-40 lg:min-w-fit">
-                                      {word.japaneseWord}
+                                      {editingWord === word.id ? (
+                                        <Input
+                                          value={editForm.japaneseWord}
+                                          onChange={(e) =>
+                                            setEditForm({
+                                              ...editForm,
+                                              japaneseWord: e.target.value,
+                                            })
+                                          }
+                                          className="h-8 text-sm"
+                                        />
+                                      ) : (
+                                        word.japaneseWord
+                                      )}
                                     </td>
                                     <td className="py-3.5 pr-4 text-neutral-500">
-                                      {word.banglaMeaning}
+                                      {editingWord === word.id ? (
+                                        <Input
+                                          value={editForm.banglaMeaning}
+                                          onChange={(e) =>
+                                            setEditForm({
+                                              ...editForm,
+                                              banglaMeaning: e.target.value,
+                                            })
+                                          }
+                                          className="h-8 text-sm"
+                                        />
+                                      ) : (
+                                        word.banglaMeaning
+                                      )}
                                     </td>
                                     <td className="py-3.5 pr-4">
-                                      <span className="bg-neutral-100 text-neutral-600 text-xs px-2.5 py-1 rounded-full border border-neutral-200 dark:bg-white/[0.03] dark:text-neutral-400 dark:border-white/[0.06]">
-                                        {word.chapter}
-                                      </span>
+                                      {editingWord === word.id ? (
+                                        <Input
+                                          value={editForm.chapter}
+                                          onChange={(e) =>
+                                            setEditForm({
+                                              ...editForm,
+                                              chapter: e.target.value,
+                                            })
+                                          }
+                                          className="h-8 text-sm"
+                                        />
+                                      ) : (
+                                        <span className="bg-neutral-100 text-neutral-600 text-xs px-2.5 py-1 rounded-full border border-neutral-200 dark:bg-white/[0.03] dark:text-neutral-400 dark:border-white/[0.06]">
+                                          {word.chapter}
+                                        </span>
+                                      )}
                                     </td>
-                                    <td className="py-3.5">
+                                    <td className="py-3.5 pr-4">
                                       {word.imageUrl ? (
                                         <Link
                                           href={word.imageUrl}
@@ -342,6 +468,57 @@ export default function AdminDashboard() {
                                         </span>
                                       )}
                                     </td>
+                                    <td className="py-3.5">
+                                      {editingWord === word.id ? (
+                                        <div className="flex gap-1">
+                                          <Button
+                                            variant="premium"
+                                            size="sm"
+                                            onClick={saveEdit}
+                                            disabled={savingWord}
+                                            className="h-8 rounded-lg text-xs font-bold"
+                                          >
+                                            Save
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={cancelEdit}
+                                            className="h-8 rounded-lg text-xs font-bold"
+                                          >
+                                            Cancel
+                                          </Button>
+                                        </div>
+                                      ) : (
+                                        <div className="flex gap-1">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => startEdit(word)}
+                                            className="h-8 rounded-lg text-xs font-bold text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                                          >
+                                            Edit
+                                          </Button>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            disabled={deletingId === word.id}
+                                            onClick={() => {
+                                              if (
+                                                window.confirm(
+                                                  `Delete word "${word.japaneseWord}" (${word.id})?`,
+                                                )
+                                              ) {
+                                                deleteWord(word.id);
+                                              }
+                                            }}
+                                            className="h-8 rounded-lg text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950/40"
+                                          >
+                                            Delete
+                                          </Button>
+                                        </div>
+                                      )}
+                                    </td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -358,7 +535,7 @@ export default function AdminDashboard() {
                             No exam templates defined.
                           </p>
                         ) : (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                             {templates.map((template) => (
                               <Card
                                 key={template.templateId}
@@ -445,6 +622,7 @@ export default function AdminDashboard() {
                                   <th className="pb-3 pr-4 text-center">
                                     Score
                                   </th>
+                                  <th className="pb-3 pr-4">Status</th>
                                   <th className="pb-3 pr-4">Date</th>
                                   <th className="pb-3">Action</th>
                                 </tr>
@@ -479,6 +657,17 @@ export default function AdminDashboard() {
                                         {result.score} / {result.totalMarks} (
                                         {Math.round(scorePercentage)}%)
                                       </td>
+                                      <td className="py-3.5 pr-4">
+                                        {result.status === "pending_review" ? (
+                                          <span className="bg-amber-100 text-amber-700 text-xs px-2.5 py-1 rounded-full border border-amber-200 font-semibold dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800">
+                                            Pending Review
+                                          </span>
+                                        ) : (
+                                          <span className="bg-emerald-100 text-emerald-700 text-xs px-2.5 py-1 rounded-full border border-emerald-200 font-semibold dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800">
+                                            Reviewed
+                                          </span>
+                                        )}
+                                      </td>
                                       <td className="py-3.5 pr-4 text-xs text-neutral-500">
                                         {new Date(
                                           result.timestamp,
@@ -491,6 +680,19 @@ export default function AdminDashboard() {
                                         })}
                                       </td>
                                       <td className="py-3.5 flex gap-1">
+                                        {result.canReview && (
+                                          <Link
+                                            href={`/admin/review/${result.resultId}`}
+                                          >
+                                            <Button
+                                              variant="premium"
+                                              size="sm"
+                                              className="h-8 rounded-lg text-xs font-bold gap-1"
+                                            >
+                                              <Eye className="h-3 w-3" /> Review
+                                            </Button>
+                                          </Link>
+                                        )}
                                         <Link
                                           href={`/result/${result.resultId}`}
                                         >

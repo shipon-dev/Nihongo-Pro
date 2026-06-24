@@ -26,32 +26,33 @@ export async function POST(req: Request) {
     const spreadsheetId = process.env.GOOGLE_SHEET_ID;
 
 
-    // ১. মেইন রেজাল্ট অ্যাপেন্ড করুন (১টি রিকোয়েস্ট)
+    const isTemplate = templateId && templateId !== "Practice";
+    const status = isTemplate ? "pending_review" : "reviewed";
+
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: "Exam_Results!A2:F",
+      range: "Exam_Results!A2:G",
       valueInputOption: "USER_ENTERED",
       requestBody: {
-        values: [[resultId, userName, templateId || "Practice", score, totalMarks, timestamp]],
+        values: [[resultId, userName, templateId || "Practice", score, totalMarks, timestamp, status]],
       },
     });
 
-    // ২. লুপ ছাড়া সব ডিটেইলস একসাথে রেডি করুন
     const rowsToInsert = responses.map((response) => [
       resultId,
       response.wordId || "",
       response.userAnswer || "",
       response.correctAnswer || "",
       response.isCorrect ? "TRUE" : "FALSE",
+      response.isCorrect ? "TRUE" : "FALSE",
     ]);
 
-    // ৩. সবগুলো রো একসাথে ১টি মাত্র রিকোয়েস্টে অ্যাপেন্ড করুন 🚀
     await sheets.spreadsheets.values.append({
       spreadsheetId,
-      range: "Result_Details!A2:E",
+      range: "Result_Details!A2:F",
       valueInputOption: "USER_ENTERED",
       requestBody: {
-        values: rowsToInsert, // এখানে টু-ডাইমেনশনাল অ্যারে যাচ্ছে
+        values: rowsToInsert,
       },
     });
 

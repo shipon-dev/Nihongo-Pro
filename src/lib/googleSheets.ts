@@ -86,6 +86,24 @@ export async function appendSheetRows(range: string, values: any[][]) {
   }
 }
 
+export async function updateSheetRange(range: string, values: any[][]) {
+  if (!spreadsheetId) {
+    throw new Error("GOOGLE_SHEET_ID environment variable is missing.");
+  }
+  try {
+    const response = await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range,
+      valueInputOption: "USER_ENTERED",
+      requestBody: { values },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error(`Error updating range ${range}:`, error);
+    throw error;
+  }
+}
+
 export async function verifySheetsConnection() {
   if (!clientEmail || !privateKey || !spreadsheetId) {
     return {

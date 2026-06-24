@@ -5,18 +5,26 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const rows = await getSheetData("Exam_Results!A2:F");
+    const rows = await getSheetData("Exam_Results!A2:G");
     
-    const results = rows.map((row) => ({
-      resultId: row[0] || "",
-      userName: row[1] || "",
-      templateId: row[2] || "",
-      score: parseInt(row[3]) || 0,
-      totalMarks: parseInt(row[4]) || 0,
-      timestamp: row[5] || "",
-    }));
+    const results = rows
+      .filter((row) => row[0] && row[0].trim() !== "")
+      .map((row) => {
+        const isTemplate = row[2] && row[2] !== "Practice";
+        const hasStatus = row[6] && row[6].trim() !== "";
 
-    // Sort by timestamp desc
+        return {
+          resultId: row[0] || "",
+          userName: row[1] || "",
+          templateId: row[2] || "",
+          score: parseInt(row[3]) || 0,
+          totalMarks: parseInt(row[4]) || 0,
+          timestamp: row[5] || "",
+          status: hasStatus ? row[6] : "reviewed",
+          canReview: isTemplate,
+        };
+      });
+
     results.reverse();
 
     return NextResponse.json({ success: true, results });

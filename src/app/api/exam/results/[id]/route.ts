@@ -16,10 +16,9 @@ export async function GET(req: Request, { params }: RouteParams) {
       return NextResponse.json({ error: "Missing result ID" }, { status: 400 });
     }
 
-    // Fetch Exam Results, Result Details, and Words Dataset
     const [resultsRows, detailsRows, wordsRows] = await Promise.all([
-      getSheetData("Exam_Results!A2:F"),
-      getSheetData("Result_Details!A2:E"),
+      getSheetData("Exam_Results!A2:G"),
+      getSheetData("Result_Details!A2:F"),
       getSheetData("Words_Dataset!A2:E"),
     ]);
 
@@ -36,6 +35,7 @@ export async function GET(req: Request, { params }: RouteParams) {
       score: parseInt(resultRow[3]) || 0,
       totalMarks: parseInt(resultRow[4]) || 0,
       timestamp: resultRow[5] || "",
+      status: resultRow[6] || "reviewed",
     };
 
     // Filter detailed answers for this result ID
@@ -52,7 +52,6 @@ export async function GET(req: Request, { params }: RouteParams) {
       });
     });
 
-    // Formulate final response detail items
     const responses = matchingDetails.map((row) => {
       const wordId = row[1] || "";
       const wordInfo = wordsMap.get(wordId) || {
@@ -62,11 +61,14 @@ export async function GET(req: Request, { params }: RouteParams) {
         chapter: "",
       };
 
+      const isAutoCorrect = row[4] === "TRUE";
+      const adminCorrect = row.length > 5 ? row[5] === "TRUE" : isAutoCorrect;
+
       return {
         wordId,
         userAnswer: row[2] || "",
         correctAnswer: row[3] || "",
-        isCorrect: row[4] === "TRUE",
+        isCorrect: adminCorrect,
         japaneseWord: wordInfo.japaneseWord,
         correctBanglaMeaning: wordInfo.banglaMeaning,
         imageUrl: wordInfo.imageUrl,
