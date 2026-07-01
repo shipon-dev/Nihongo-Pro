@@ -62,7 +62,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
   const [submittedResultId, setSubmittedResultId] = useState<string | null>(
     null,
   );
-  const [revealedAnswers, setRevealedAnswers] = useState<Set<string>>(new Set());
+  const [allRevealed, setAllRevealed] = useState(false);
 
   const filterChaptersRef = useRef("");
 
@@ -456,26 +456,8 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
               </div>
               {isSelfStudy ? (
                 <div>
-                  <Button
-                    type="button"
-                    variant={revealedAnswers.has(q.wordId) ? "premium" : "outline"}
-                    className="h-12 rounded-xl font-semibold"
-                    onClick={() => {
-                      const next = new Set(revealedAnswers);
-                      if (next.has(q.wordId)) {
-                        next.delete(q.wordId);
-                      } else {
-                        next.add(q.wordId);
-                      }
-                      setRevealedAnswers(next);
-                    }}
-                  >
-                    {revealedAnswers.has(q.wordId)
-                      ? "Hide Answer"
-                      : "Show Answer"}
-                  </Button>
-                  {revealedAnswers.has(q.wordId) && (
-                    <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+                  {allRevealed && (
+                    <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
                       <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
                       <span className="text-base font-bold text-emerald-700 dark:text-emerald-300">
                         {q.correctAnswer}
@@ -506,11 +488,11 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
       <div className="sticky bottom-4">
         {isSelfStudy ? (
           <Button
-            onClick={() => router.push("/")}
+            onClick={() => setAllRevealed(!allRevealed)}
             variant="premium"
             className="w-full h-14 text-lg font-bold rounded-xl shadow-xl shadow-emerald-500/20"
           >
-            End Session
+            <CheckCircle2 className="h-5 w-5" /> {allRevealed ? "Hide All Answers" : "Reveal All Answers"}
           </Button>
         ) : (
           <Button
