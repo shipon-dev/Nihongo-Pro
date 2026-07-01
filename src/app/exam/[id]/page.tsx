@@ -48,6 +48,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
   const { toast } = useToast();
 
   const isPractice = params.id === "practice";
+  const isSelfStudy = params.id === "self-study";
 
   const [loggedIn, setLoggedIn] = useState(false);
   const [userName, setUserName] = useState("");
@@ -61,6 +62,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
   const [submittedResultId, setSubmittedResultId] = useState<string | null>(
     null,
   );
+  const [revealedAnswers, setRevealedAnswers] = useState<Set<string>>(new Set());
 
   const filterChaptersRef = useRef("");
 
@@ -80,7 +82,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [params.id, router, searchParams]);
 
   useEffect(() => {
     if (!loggedIn) return;
@@ -90,7 +92,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
         setLoading(true);
         let targetWords: Word[] = [];
 
-        if (isPractice) {
+        if (isPractice || isSelfStudy) {
           const fetchUrl = filterChaptersRef.current
             ? `/api/exam/words?chapter=${encodeURIComponent(filterChaptersRef.current)}`
             : "/api/exam/words";
@@ -162,7 +164,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
         setAnswers(
           formatted.map((q) => ({ wordId: q.wordId, userAnswer: "" })),
         );
-        if (!isPractice) setPracticeSetup(false);
+        if (!isPractice && !isSelfStudy) setPracticeSetup(false);
       } catch (err) {
         console.error("Failed setting up exam:", err);
       } finally {
@@ -171,7 +173,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
     }
 
     setupExam();
-  }, [loggedIn, params.id]);
+  }, [loggedIn, params.id, isPractice, isSelfStudy, router, toast]);
 
   const handleSubmit = async () => {
     const finalResponses: ResponseDetail[] = questions.map((q, i) => {
@@ -339,7 +341,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
     );
   }
 
-  if (isPractice && practiceSetup) {
+  if ((isPractice || isSelfStudy) && practiceSetup) {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center p-6">
         <Card className="w-full max-w-lg p-8">
@@ -406,7 +408,7 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
     );
   }
 
-  const answeredCount = answers.filter((a) => a.userAnswer.trim()).length;
+  const answeredCount = isSelfStudy ? 0 : answers.filter((a) => a.userAnswer.trim()).length;
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
@@ -417,6 +419,10 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
               <>
                 <ListChecks className="h-5 w-5 text-emerald-500" /> Practice
                 Sheet
+              </>
+            ) : isSelfStudy ? (
+              <>
+                <ListChecks className="h-5 w-5 text-emerald-500" /> Self Study
               </>
             ) : (
               <>
@@ -448,42 +454,83 @@ export default function ExamConsole({ params }: { params: { id: string } }) {
                   #{index + 1}
                 </span>
               </div>
-              <Input
-                value={answers[index]?.userAnswer || ""}
-                onChange={(e) => {
-                  const updated = [...answers];
-                  updated[index] = {
-                    ...updated[index],
-                    userAnswer: e.target.value,
-                  };
-                  setAnswers(updated);
-                }}
-                placeholder="বাংলায় অর্থ লিখুন..."
-                className="h-12 rounded-xl border-2 text-base font-semibold"
-              />
+              {isSelfStudy ? (
+                <div>
+                  <Button
+                    type="button"
+                    variant={revealedAnswers.has(q.wordId) ? "premium" : "outline"}
+                    className="h-12 rounded-xl font-semibold"
+                    onClick={() => {
+                      const next = new Set(revealedAnswers);
+                      if (next.has(q.wordId)) {
+                        next.delete(q.wordId);
+                      } else {
+                        next.add(q.wordId);
+                      }
+                      setRevealedAnswers(next);
+                    }}
+                  >
+                    {revealedAnswers.has(q.wordId)
+                      ? "Hide Answer"
+                      : "Show Answer"}
+                  </Button>
+                  {revealedAnswers.has(q.wordId) && (
+                    <div className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+                      <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
+                      <span className="text-base font-bold text-emerald-700 dark:text-emerald-300">
+                        {q.correctAnswer}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Input
+                  value={answers[index]?.userAnswer || ""}
+                  onChange={(e) => {
+                    const updated = [...answers];
+                    updated[index] = {
+                      ...updated[index],
+                      userAnswer: e.target.value,
+                    };
+                    setAnswers(updated);
+                  }}
+                  placeholder="বাংলায় অর্থ লিখুন..."
+                  className="h-12 rounded-xl border-2 text-base font-semibold"
+                />
+              )}
             </CardContent>
           </Card>
         ))}
       </div>
 
       <div className="sticky bottom-4">
-        <Button
-          onClick={handleSubmit}
-          variant="premium"
-          className="w-full h-14 text-lg font-bold rounded-xl shadow-xl shadow-emerald-500/20"
-          disabled={submitting}
-        >
-          {submitting ? (
-            <span className="flex items-center gap-2">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              Submitting...
-            </span>
-          ) : (
-            <span className="flex items-center gap-2">
-              <Send className="h-5 w-5" /> Submit All Answers
-            </span>
-          )}
-        </Button>
+        {isSelfStudy ? (
+          <Button
+            onClick={() => router.push("/")}
+            variant="premium"
+            className="w-full h-14 text-lg font-bold rounded-xl shadow-xl shadow-emerald-500/20"
+          >
+            End Session
+          </Button>
+        ) : (
+          <Button
+            onClick={handleSubmit}
+            variant="premium"
+            className="w-full h-14 text-lg font-bold rounded-xl shadow-xl shadow-emerald-500/20"
+            disabled={submitting}
+          >
+            {submitting ? (
+              <span className="flex items-center gap-2">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                Submitting...
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Send className="h-5 w-5" /> Submit All Answers
+              </span>
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );

@@ -30,7 +30,7 @@ export default function Home() {
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [templateId, setTemplateId] = useState("");
-  const [isPractice, setIsPractice] = useState(true);
+  const [examMode, setExamMode] = useState<"practice" | "scheduled" | "self-study">("practice");
   const [selectedChapters, setSelectedChapters] = useState<string[]>([]);
   const [availableChapters, setAvailableChapters] = useState<string[]>([]);
   const [availableTemplates, setAvailableTemplates] = useState<Template[]>([]);
@@ -86,16 +86,18 @@ export default function Home() {
       return;
     }
     setValidating(true);
-    if (isPractice) {
+    if (examMode === "practice" || examMode === "self-study") {
       const chaptersParam =
         selectedChapters.length > 0 ? selectedChapters.join(",") : "";
+      const mode = examMode === "self-study" ? "self-study" : "practice";
+      const title = examMode === "self-study" ? "Self Study Started!" : "Practice Started!";
       toast({
         variant: "success",
-        title: "Practice Started!",
-        description: `Welcome, ${userName}. Launching practice room...`,
+        title,
+        description: `Welcome, ${userName}. Launching ${examMode} room...`,
       });
       router.push(
-        `/exam/practice?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(userEmail)}&chapters=${encodeURIComponent(chaptersParam)}`,
+        `/exam/${mode}?name=${encodeURIComponent(userName)}&email=${encodeURIComponent(userEmail)}&chapters=${encodeURIComponent(chaptersParam)}`,
       );
       setValidating(false);
       return;
@@ -224,9 +226,9 @@ export default function Home() {
                 <div className="flex gap-1 rounded-2xl border border-neutral-200 bg-neutral-50 p-1 dark:border-white/[0.06] dark:bg-white/[0.02]">
                   <button
                     type="button"
-                    onClick={() => setIsPractice(true)}
+                    onClick={() => setExamMode("practice")}
                     className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition-all duration-300 ${
-                      isPractice
+                      examMode === "practice"
                         ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
                         : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white"
                     }`}
@@ -235,18 +237,45 @@ export default function Home() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setIsPractice(false)}
+                    onClick={() => setExamMode("scheduled")}
                     className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition-all duration-300 ${
-                      !isPractice
+                      examMode === "scheduled"
                         ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
                         : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white"
                     }`}
                   >
                     Scheduled Exam Set
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => setExamMode("self-study")}
+                    className={`flex-1 rounded-xl py-2.5 text-xs font-bold transition-all duration-300 ${
+                      examMode === "self-study"
+                        ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20"
+                        : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-white"
+                    }`}
+                  >
+                    Self Study Mode
+                  </button>
                 </div>
 
-                {isPractice ? (
+                {examMode === "scheduled" ? (
+                  <div className="animate-slide-in space-y-2">
+                    <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-450">
+                      <ShieldAlert className="h-3.5 w-3.5 text-red-500" /> Exam
+                      Template Code
+                    </label>
+                    <Input
+                      placeholder="e.g. T-102"
+                      value={templateId}
+                      onChange={(e) => setTemplateId(e.target.value)}
+                      className="h-12 text-center text-lg font-bold uppercase tracking-widest"
+                    />
+                    <p className="text-center text-[10px] text-neutral-500">
+                      Enter the test code provided by your administrator.
+                    </p>
+                  </div>
+                ) : (
                   <div className="animate-slide-in space-y-3 rounded-2xl border border-neutral-200 bg-neutral-50 p-4 dark:border-white/[0.06] dark:bg-white/[0.02]">
                     <label className="flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-450">
                       <BookOpen className="h-3.5 w-3.5 text-neutral-500" />{" "}
@@ -277,22 +306,6 @@ export default function Home() {
                         })}
                       </div>
                     )}
-                  </div>
-                ) : (
-                  <div className="animate-slide-in space-y-2">
-                    <label className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-450">
-                      <ShieldAlert className="h-3.5 w-3.5 text-red-500" /> Exam
-                      Template Code
-                    </label>
-                    <Input
-                      placeholder="e.g. T-102"
-                      value={templateId}
-                      onChange={(e) => setTemplateId(e.target.value)}
-                      className="h-12 text-center text-lg font-bold uppercase tracking-widest"
-                    />
-                    <p className="text-center text-[10px] text-neutral-500">
-                      Enter the test code provided by your administrator.
-                    </p>
                   </div>
                 )}
 
